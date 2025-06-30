@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+            height: calc(100vh - 30px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            flex-shrink: 0;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+
+        .detection-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            flex: 1;
+            align-items: center;
+            max-height: 400px;
+        }
+
+        .detection-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .detection-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .detection-card:hover::before {
+            left: 100%;
+        }
+
+        .detection-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border-color: #3498db;
+        }
+
+        .stroke-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+
+        .tuberculosis-card {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stroke-icon {
+            background-image: url('/placeholder.svg?height=60&width=60');
+            background-color: #e74c3c;
+        }
+
+        .tuberculosis-icon {
+            background-image: url('/placeholder.svg?height=60&width=60');
+            background-color: #1abc9c;
+        }
+
+        .card-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .detect-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        .detect-btn:hover {
+            background: white;
+            color: #2c3e50;
+            transform: scale(1.05);
+        }
+
+        .features {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            flex-shrink: 0;
+            margin-top: 15px;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+
+        .feature-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                height: calc(100vh - 20px);
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            
+            .detection-options {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                max-height: none;
+            }
+            
+            .detection-card {
+                padding: 15px;
+            }
+            
+            .card-title {
+                font-size: 1.3rem;
+            }
+            
+            .card-description {
+                font-size: 0.8rem;
+            }
+            
+            .features {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .logo {
+                width: 50px;
+                height: 50px;
+                font-size: 25px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                margin-bottom: 10px;
+            }
+            
+            .logo {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                margin-bottom: 8px;
+            }
+            
+            h1 {
+                font-size: 1.4rem;
+                margin-bottom: 5px;
+            }
+            
+            .subtitle {
+                font-size: 0.8rem;
+            }
+            
+            .detection-card {
+                padding: 15px;
+            }
+            
+            .card-icon {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 8px;
+            }
+            
+            .card-title {
+                font-size: 1.2rem;
+                margin-bottom: 8px;
+            }
+            
+            .card-description {
+                font-size: 0.75rem;
+                margin-bottom: 15px;
+            }
+            
+            .features {
+                margin-top: 8px;
+                gap: 10px;
+            }
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏥</div>
+            <h1>Medical Detection System</h1>
+            <p class="subtitle">Advanced AI-Powered Diagnostic Tools</p>
+        </div>
+
+        <div class="detection-options">
+            <div class="detection-card stroke-card" onclick="navigateToDetection('stroke')">
+                <div class="card-icon stroke-icon"></div>
+                <h3 class="card-title">Stroke Detection</h3>
+                <p class="card-description">
+                    Early detection of stroke symptoms using advanced machine learning algorithms. 
+                    Quick and accurate analysis for timely medical intervention.
+                </p>
+                <a href="predict.html?type=stroke" class="detect-btn">Start Stroke Analysis</a>
+            </div>
+
+            <div class="detection-card tuberculosis-card" onclick="navigateToDetection('tuberculosis')">
+                <div class="card-icon tuberculosis-icon"></div>
+                <h3 class="card-title">Tuberculosis Detection</h3>
+                <p class="card-description">
+                    Comprehensive TB screening using chest X-ray analysis and symptom evaluation. 
+                    Reliable detection for better patient outcomes.
+                </p>
+                <a href="predict.html?type=tuberculosis" class="detect-btn">Start TB Analysis</a>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">✓</div>
+                <span>AI-Powered Analysis</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <span>Fast Results</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <span>Secure & Private</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <span>Detailed Reports</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loadingScreen">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Add smooth animations and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hover effects to cards
+            const cards = document.querySelectorAll('.detection-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Add click animations
+            const buttons = document.querySelectorAll('.detect-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Show loading screen
+                    document.getElementById('loadingScreen').style.display = 'flex';
+                    
+                    // Add ripple effect
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.classList.add('ripple');
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+
+        function navigateToDetection(type) {
+            // Add some visual feedback
+            const card = event.currentTarget;
+            card.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                card.style.transform = 'scale(1)';
+                window.location.href = `predict.html?type=${type}`;
+            }, 150);
+        }
+    </script>
+</body>
+</html>

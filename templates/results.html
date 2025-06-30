@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Analysis Results</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      max-width: 1000px;
+      margin: 0 auto;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 15px;
+      background: linear-gradient(45deg, #4CAF50, #2196F3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      color: white;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    h1 {
+      color: #2c3e50;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .result-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border-left: 5px solid;
+    }
+
+    .result-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .stroke-result {
+      border-left-color: #e74c3c;
+    }
+
+    .tb-result {
+      border-left-color: #1abc9c;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .result-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-right: 15px;
+      color: white;
+    }
+
+    .stroke-icon {
+      background: linear-gradient(45deg, #e74c3c, #c0392b);
+    }
+
+    .tb-icon {
+      background: linear-gradient(45deg, #1abc9c, #16a085);
+    }
+
+    .result-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .confidence-bar {
+      background: #ecf0f1;
+      border-radius: 10px;
+      height: 20px;
+      margin: 15px 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 2s ease-in-out;
+      position: relative;
+    }
+
+    .stroke-confidence {
+      background: linear-gradient(45deg, #e74c3c, #c0392b);
+    }
+
+    .tb-confidence {
+      background: linear-gradient(45deg, #1abc9c, #16a085);
+    }
+
+    .confidence-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .result-status {
+      padding: 10px 15px;
+      border-radius: 25px;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .status-positive {
+      background: #fee;
+      color: #c0392b;
+      border: 2px solid #e74c3c;
+    }
+
+    .status-negative {
+      background: #eafaf1;
+      color: #27ae60;
+      border: 2px solid #2ecc71;
+    }
+
+    .detailed-analysis {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .analysis-title {
+      color: #2c3e50;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .analysis-title::before {
+      content: '📊';
+      margin-right: 10px;
+      font-size: 1.8rem;
+    }
+
+    .analysis-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .analysis-item:last-child {
+      border-bottom: none;
+    }
+
+    .analysis-label {
+      font-weight: 600;
+      color: #34495e;
+    }
+
+    .analysis-value {
+      color: #7f8c8d;
+      font-weight: 500;
+    }
+
+    .recommendations {
+      background: linear-gradient(135deg, #74b9ff, #0984e3);
+      color: white;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+
+    .recommendations h3 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .recommendations h3::before {
+      content: '💡';
+      margin-right: 10px;
+      font-size: 1.6rem;
+    }
+
+    .recommendation-list {
+      list-style: none;
+    }
+
+    .recommendation-list li {
+      padding: 8px 0;
+      padding-left: 25px;
+      position: relative;
+    }
+
+    .recommendation-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #00b894;
+      font-weight: bold;
+      background: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-download {
+      background: linear-gradient(45deg, #e60023, #c4001d);
+      color: white;
+      box-shadow: 0 5px 15px rgba(230, 0, 35, 0.3);
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 5px 15px rgba(230, 0, 35, 0.3); }
+      to { box-shadow: 0 8px 30px rgba(230, 0, 35, 0.6); }
+    }
+
+    .btn-download:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 10px 35px rgba(230, 0, 35, 0.5);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(45deg, #6c757d, #495057);
+      color: white;
+      box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, #007bff, #0056b3);
+      color: white;
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+    }
+
+    .timestamp {
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ecf0f1;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+      }
+    }
+
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🔬</div>
+      <h1>Medical Analysis Results</h1>
+      <p class="subtitle">AI-Powered Diagnostic Analysis Report</p>
+    </div>
+
+    <div class="results-grid">
+      <div class="result-card stroke-result">
+        <div class="result-header">
+          <div class="result-icon stroke-icon">🧠</div>
+          <div class="result-title">Stroke Detection</div>
+        </div>
+        <div class="confidence-bar">
+          <div class="confidence-fill stroke-confidence" style="width: 0%" id="strokeConfidence">
+            <div class="confidence-text" id="strokeText">0%</div>
+          </div>
+        </div>
+        <div class="result-status status-negative" id="strokeStatus">
+          Low Risk Detected
+        </div>
+      </div>
+
+      <div class="result-card tb-result">
+        <div class="result-header">
+          <div class="result-icon tb-icon">🫁</div>
+          <div class="result-title">Tuberculosis Detection</div>
+        </div>
+        <div class="confidence-bar">
+          <div class="confidence-fill tb-confidence" style="width: 0%" id="tbConfidence">
+            <div class="confidence-text">{{ tb_confidence }}%</div>
+          </div>
+        </div>
+        <div class="result-status">{{ tb_result }}</div>
+          No TB Detected
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+    <div class="detailed-analysis">
+      <div class="analysis-title">Detailed Analysis</div>
+      <div class="analysis-item">
+        <span class="analysis-label">Image Quality Score</span>
+        <span class="analysis-value">95.2%</span>
+      </div>
+      <div class="analysis-item">
+        <span class="analysis-label">Processing Time</span>
+        <span class="analysis-value">2.3 seconds</span>
+      </div>
+      <div class="analysis-item">
+        <span class="analysis-label">Model Version</span>
+        <span class="analysis-value">v2.1.4</span>
+      </div>
+      <div class="analysis-item">
+        <span class="analysis-label">Analysis Date</span>
+        <span class="analysis-value" id="analysisDate"></span>
+      </div>
+      <div class="analysis-item">
+        <span class="analysis-label">Patient ID</span>
+        <span class="analysis-value">PAT-2024-001</span>
+      </div>
+    </div>
+
+    <div class="recommendations">
+      <h3>Medical Recommendations</h3>
+      <ul class="recommendation-list">
+        <li>Continue regular health monitoring and checkups</li>
+        <li>Maintain a healthy lifestyle with proper diet and exercise</li>
+        <li>Consult with healthcare provider for personalized advice</li>
+        <li>Schedule follow-up screening as recommended by physician</li>
+        <li>Keep this report for medical records</li>
+      </ul>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-download" onclick="downloadPDF()">
+        📄 Download PDF Report
+      </button>
+      <a href="camera.html" class="btn btn-secondary">
+        📷 New Analysis
+      </a>
+      <a href="index.html" class="btn btn-primary">
+        🏠 Back to Home
+      </a>
+    </div>
+
+    <div class="timestamp">
+      Report generated on <span id="timestamp"></span>
+    </div>
+  </div>
+
+  <div class="loading" id="loadingScreen">
+    <div class="spinner"></div>
+    <div>Generating PDF Report...</div>
+  </div>
+
+  <script>
+    // Simulate realistic medical analysis results
+    const results = {
+      stroke: {
+        confidence: Math.random() * 30 + 5, // 5-35% for low risk
+        risk: 'low'
+      },
+      tb: {
+        confidence: Math.random() * 25 + 3, // 3-28% for negative
+        risk: 'negative'
+      }
+    };
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set current date and time
+      const now = new Date();
+      document.getElementById('timestamp').textContent = now.toLocaleString();
+      document.getElementById('analysisDate').textContent = now.toLocaleDateString();
+
+      // Animate confidence bars
+      setTimeout(() => {
+        animateConfidenceBar('stroke', results.stroke.confidence);
+        animateConfidenceBar('tb', results.tb.confidence);
+      }, 500);
+
+      // Update status based on results
+      updateResultStatus();
+    });
+
+    function animateConfidenceBar(type, confidence) {
+      const confidenceBar = document.getElementById(type + 'Confidence');
+      const confidenceText = document.getElementById(type + 'Text');
+      
+      confidenceBar.style.width = confidence + '%';
+      
+      // Animate the percentage counter
+      let current = 0;
+      const increment = confidence / 50;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= confidence) {
+          current = confidence;
+          clearInterval(timer);
+        }
+        confidenceText.textContent = Math.round(current) + '%';
+      }, 40);
+    }
+
+    function updateResultStatus() {
+      const strokeStatus = document.getElementById('strokeStatus');
+      const tbStatus = document.getElementById('tbStatus');
+
+      // Update stroke status
+      if (results.stroke.confidence > 70) {
+        strokeStatus.textContent = 'High Risk Detected';
+        strokeStatus.className = 'result-status status-positive';
+      } else if (results.stroke.confidence > 40) {
+        strokeStatus.textContent = 'Moderate Risk Detected';
+        strokeStatus.className = 'result-status status-positive';
+      } else {
+        strokeStatus.textContent = 'Low Risk Detected';
+        strokeStatus.className = 'result-status status-negative';
+      }
+
+      // Update TB status
+      if (results.tb.confidence > 60) {
+        tbStatus.textContent = 'TB Detected';
+        tbStatus.className = 'result-status status-positive';
+      } else if (results.tb.confidence > 30) {
+        tbStatus.textContent = 'Possible TB Signs';
+        tbStatus.className = 'result-status status-positive';
+      } else {
+        tbStatus.textContent = 'No TB Detected';
+        tbStatus.className = 'result-status status-negative';
+      }
+    }
+
+    function downloadPDF() {
+      // Show loading screen
+      document.getElementById('loadingScreen').style.display = 'flex';
+
+      // Simulate processing time
+      setTimeout(() => {
+        generatePDF();
+        document.getElementById('loadingScreen').style.display = 'none';
+      }, 2000);
+    }
+
+    function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Set up the PDF
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      
+      // Header
+      doc.setFillColor(102, 126, 234);
+      doc.rect(0, 0, pageWidth, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('Medical Analysis Report', pageWidth / 2, 25, { align: 'center' });
+
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      
+      // Patient Information
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('Patient Information', 20, 60);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text('Patient ID: PAT-2024-001', 20, 75);
+      doc.text('Analysis Date: ' + new Date().toLocaleDateString(), 20, 85);
+      doc.text('Report Generated: ' + new Date().toLocaleString(), 20, 95);
+
+      // Stroke Results
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('Stroke Detection Results', 20, 120);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text('Confidence Level: ' + Math.round(results.stroke.confidence) + '%', 20, 135);
+      doc.text('Risk Assessment: ' + (results.stroke.confidence > 40 ? 'Elevated Risk' : 'Low Risk'), 20, 145);
+      doc.text('Status: ' + (results.stroke.confidence > 40 ? 'Requires Medical Attention' : 'Normal Range'), 20, 155);
+
+      // TB Results
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('Tuberculosis Detection Results', 20, 180);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text('Confidence Level: ' + Math.round(results.tb.confidence) + '%', 20, 195);
+      doc.text('Detection Status: ' + (results.tb.confidence > 30 ? 'Possible TB Signs' : 'No TB Detected'), 20, 205);
+      doc.text('Recommendation: ' + (results.tb.confidence > 30 ? 'Further Testing Required' : 'Continue Regular Monitoring'), 20, 215);
+
+      // Technical Details
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('Technical Details', 20, 240);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text('Image Quality Score: 95.2%', 20, 255);
+      doc.text('Processing Time: 2.3 seconds', 20, 265);
+      doc.text('Model Version: v2.1.4', 20, 275);
+
+      // Footer
+      doc.setFillColor(240, 240, 240);
+      doc.rect(0, pageHeight - 30, pageWidth, 30, 'F');
+      
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(10);
+      doc.text('This report is generated by AI and should be reviewed by a qualified medical professional.', pageWidth / 2, pageHeight - 15, { align: 'center' });
+      doc.text('For medical emergencies, contact your healthcare provider immediately.', pageWidth / 2, pageHeight - 5, { align: 'center' });
+
+      // Save the PDF
+      const fileName = `Medical_Analysis_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+    }
+  </script>
+</body>
+</html>
